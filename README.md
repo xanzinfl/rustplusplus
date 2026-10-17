@@ -2,7 +2,7 @@
 
 <img width="640" height="426" alt="Rust++ + Home Assistant image" src="https://github.com/user-attachments/assets/4d53bf8a-ef7c-42b0-803f-43db6f301b38" />
 
-A Home Assistant add-on for running the RustPlusPlus Discord bot, which connects to Rust game servers via the Rust+ Companion App — with native Home Assistant MQTT device integration.
+A Home Assistant add-on for running the RustPlusPlus Discord bot, which connects to Rust game servers via the Rust+ Companion App.
 
 ---
 
@@ -20,7 +20,7 @@ A Home Assistant add-on for running the RustPlusPlus Discord bot, which connects
 >
 > **Still working:** teammate tracking and the live map, team chat bridge, Smart Switches and groups,
 > Smart Alarms, Storage Monitors and TC upkeep, cameras and drones, server info and time,
-> BattleMetrics player tracking, all Home Assistant MQTT entities and Discord presence.
+> BattleMetrics player tracking, and Discord presence.
 >
 > Details, what is being done about it, and the possible workarounds:
 > **[Announcement #48](https://github.com/KarlisKocins/homeassistant-addon-rustplusplus/issues/48)**
@@ -29,21 +29,20 @@ A Home Assistant add-on for running the RustPlusPlus Discord bot, which connects
 
 ## About
 
-RustPlusPlus is a powerful Discord bot that provides Quality-of-Life features for Rust players by integrating with the Rust+ Companion App. This add-on packages the bot for easy deployment on Home Assistant, with built-in MQTT discovery so your Rust smart devices appear as native Home Assistant entities.
+RustPlusPlus is a powerful Discord bot that provides Quality-of-Life features for Rust players by integrating with the Rust+ Companion App.
 
 ### Features
 
-- 🏠 **Home Assistant Integration**: Smart devices auto-discovered via MQTT — control switches, monitor alarms, and view storage directly from your HA dashboard
 - 🚁 **Event Notifications**: Get notified about Patrol Helicopter, Cargo Ship, Chinook 47, and Oil Rig events
-- 🔌 **Smart Device Control**: Control Smart Switches and Smart Switch Groups via Discord, in-game chat, or Home Assistant
-- 🚨 **Smart Alarms**: Set up alarms that notify you when triggered — also exposed as binary sensors in HA
-- 📦 **Storage Monitoring**: Monitor Tool Cupboard upkeep and container contents — also exposed as sensors in HA
+- 🔌 **Smart Device Control**: Control Smart Switches and Smart Switch Groups via Discord, and in-game chat
+- 🚨 **Smart Alarms**: Set up alarms that notify you when triggered 
+- 📦 **Storage Monitoring**: Monitor Tool Cupboard upkeep and container contents 
 - 💬 **Team Communication**: Bridge Discord and in-game team chat
 - 👥 **Player Tracking**: Track other teams using BattleMetrics integration (requires a BattleMetrics API key)
 - 🎮 **Discord Bot Presence**: Bot status shows the connected server name and online teammate count
 - 🛠️ **QoL Commands**: Extensive list of helpful commands for Discord and in-game use
 - 🗺️ **WebUI**: Live map (teammate pins, events, shops with hover cards), Shops Browser and Insta-Profit trade finder with item icons, team statistics with an activity heatmap and player forecast, map replay
-- 🔐 **Secured WebUI**: Password/token login on direct access, or open it from the Home Assistant sidebar (ingress) behind HA's own authentication
+- 🔐 **Secured WebUI**: Password/token login on direct access
 
 ## Installation
 
@@ -68,7 +67,6 @@ RustPlusPlus is a powerful Discord bot that provides Quality-of-Life features fo
    - **Discord Client ID**: Your Discord application's client ID
    - **Discord Token**: Your Discord bot token
    - **Log Level**: Choose your preferred logging level (info recommended)
-3. Optionally configure MQTT for Home Assistant integration (see below)
 
 ### Step 4: Start the Add-on
 
@@ -107,11 +105,6 @@ You'll need to get your Rust+ credentials using the official credential applicat
 | `discord_client_id` | string | **Required** | Your Discord application's client ID |
 | `discord_token` | password | **Required** | Your Discord bot token |
 | `log_level` | list | `info` | Logging level (debug, info, warning, error) |
-| `mqtt_host` | string | `core-mosquitto` | MQTT broker hostname |
-| `mqtt_port` | integer | `1883` | MQTT broker port |
-| `mqtt_username` | string | _(empty)_ | MQTT broker username |
-| `mqtt_password` | password | _(empty)_ | MQTT broker password |
-| `mqtt_discovery` | boolean | `true` | Enable/disable MQTT auto-discovery of Rust devices in Home Assistant |
 | `battlemetrics_api_key` | password | _(empty)_ | BattleMetrics API token, required for player tracking. See [Player Tracking](#player-tracking) |
 | `webui_enabled` | boolean | `false` | Enable/disable the built-in RustPlusPlus WebUI |
 | `webui_port` | integer | `3001` | Port used by the WebUI when enabled |
@@ -148,57 +141,6 @@ the map and the WebUI all work normally. Only the player-tracking features are u
 - The information-channel player list is removed rather than shown empty
 
 The add-on log prints a warning at startup when no key is set.
-
-## Home Assistant MQTT Integration
-
-This add-on can automatically publish your Rust smart devices to Home Assistant via MQTT Discovery. When enabled, your devices appear natively in Home Assistant without any manual configuration.
-
-### Prerequisites
-
-1. Install the **Mosquitto broker** add-on from the Home Assistant Add-on Store
-2. Create an MQTT user in **Settings** → **People** → **Users** (or use an existing one)
-3. Configure the MQTT options in this add-on's configuration
-
-### Supported Device Types
-
-| Rust Device | HA Entity Type | Capabilities |
-|-------------|---------------|--------------|
-| Smart Switch | `switch` | On/Off control from HA dashboard, automations, scripts |
-| Smart Alarm | `binary_sensor` (safety) | Alarm state visible in HA, usable in automations |
-| Storage Monitor | `sensor` | Item contents and TC upkeep as sensor attributes |
-
-### How It Works
-
-1. The add-on connects to your MQTT broker on startup
-2. When you pair smart devices in Rust, they are automatically published to HA via MQTT Discovery
-3. State changes (e.g., a switch toggled in-game) are reflected in HA in real time
-4. Commands from HA (e.g., toggling a switch) are sent back to the Rust server
-
-### Entity Availability
-
-Rust entities go **unavailable** in Home Assistant instead of showing stale state. Availability is
-tracked on two retained topics, and every entity requires both to be `online`:
-
-| Topic | Meaning |
-|-------|---------|
-| `rustplus/bridge/availability` | The add-on is running and connected to the broker |
-| `rustplus/<serverId>/availability` | The Rust+ connection to that server is up |
-
-The add-on registers a Last Will with the broker, so entities also go unavailable if it crashes
-rather than shutting down cleanly. Everything recovers automatically on reconnect.
-
-This matters for automations: a switch that reads `off` because the add-on is down is very different
-from one that is genuinely off. Use `unavailable` as a guard in templates and conditions.
-
-### Example Configuration
-
-```yaml
-mqtt_host: core-mosquitto
-mqtt_port: 1883
-mqtt_username: mqtt_user
-mqtt_password: your_mqtt_password
-mqtt_discovery: true
-```
 
 ### WebUI / Statistics
 
@@ -294,18 +236,6 @@ Sometimes a restart can resolve initialization problems or temporary configurati
 3. Ensure you're paired with the correct server
 4. Try restarting the add-on
 
-### MQTT / Home Assistant Issues
-
-1. Verify the Mosquitto broker add-on is running
-2. Check MQTT credentials are correct (`mqtt_username` / `mqtt_password`)
-3. Look for `[HA] Connected to MQTT broker.` in the add-on logs
-4. If devices don't appear in HA, check **Settings** → **Devices & Services** → **MQTT**
-5. Ensure `mqtt_discovery` is set to `true`
-6. If entities show as **unavailable**, check the two availability topics (see
-   [Entity Availability](#entity-availability)). `rustplus/bridge/availability` reading `offline`
-   means the add-on is stopped or lost the broker; `rustplus/<serverId>/availability` reading
-   `offline` means the Rust+ connection to that server is down — look for reconnect messages in the log
-
 ### Player Tracking Issues
 
 1. `Access denied. A subscription is required to use the API` in the log means BattleMetrics rejected
@@ -331,7 +261,6 @@ Check the add-on logs in the **Log** tab for detailed error messages. Common iss
 - Missing Rust+ credentials
 - Network connectivity problems
 - Server pairing issues
-- `[HA] MQTT error:` messages indicating broker connection issues
 
 ### Development Smoke Test
 

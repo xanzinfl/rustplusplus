@@ -17,6 +17,7 @@
     https://github.com/alexemanuelol/rustplusplus
 
 */
+require('dotenv').config()
 
 const Discord = require('discord.js');
 const Fs = require('fs');
@@ -24,7 +25,7 @@ const Path = require('path');
 
 const DiscordBot = require('./src/structures/DiscordBot');
 const Config = require('./config');
-const HomeAssistant = require('./src/structures/HomeAssistant');
+const { configDotenv } = require('dotenv');
 
 /* Stable boot marker used by the startup smoke test */
 console.log(`rustplusplus starting (node ${process.version})`);
@@ -45,6 +46,12 @@ const client = new DiscordBot({
         version: '10'
     }
 });
+
+console.log(`"Setting log level to: ${Config.general.logLevel}`)
+
+console.log(`Starting RustPlusPlus Discord Bot...`);
+console.log(`Discord Client ID: ${Config.discord.clientId}`);
+console.log(`Data directory: ${Config.general.databasePath}`);
 
 client.build();
 
@@ -79,23 +86,3 @@ process.on('uncaughtException', error => {
 });
 
 exports.client = client;
-exports.ha = new HomeAssistant(client);
-
-/* The Supervisor sends SIGTERM when the add-on is stopped or restarted. Announce 'offline' on the
-   MQTT availability topic before exiting so Home Assistant marks the Rust entities unavailable
-   immediately instead of waiting for the broker's keepalive timeout to trigger the Last Will. */
-let shuttingDown = false;
-for (const signal of ['SIGTERM', 'SIGINT']) {
-    process.on(signal, async () => {
-        if (shuttingDown) return;
-        shuttingDown = true;
-
-        console.log(`Received ${signal}, shutting down.`);
-        try {
-            await exports.ha.shutdown();
-        } catch (error) {
-            console.error(`Error during MQTT shutdown: ${error?.message || error}`);
-        }
-        process.exit(0);
-    });
-}

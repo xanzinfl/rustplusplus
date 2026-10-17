@@ -113,10 +113,5 @@ module.exports = {
         rustplus.updateLeaderRustPlusLiteInstance();
 
         client.updatePresence();
-
-        // Publish all devices to Home Assistant
-        if (Client.ha) {
-            Client.ha.publishAllDevices(guildId, serverId, instance);
-        }
     },
 };
