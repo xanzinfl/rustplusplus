@@ -76,5 +76,5 @@ Thumbs.db
 
 
 # Database files
-.db
-.db*
+*.db
+*.db*
