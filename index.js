@@ -25,7 +25,6 @@ const Path = require('path');
 
 const DiscordBot = require('./src/structures/DiscordBot');
 const Config = require('./config');
-const { configDotenv } = require('dotenv');
 
 /* Stable boot marker used by the startup smoke test */
 console.log(`rustplusplus starting (node ${process.version})`);
